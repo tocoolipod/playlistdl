@@ -10,18 +10,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip and install yt-dlp
-RUN pip install --upgrade pip setuptools wheel \
-    && pip install --upgrade "yt-dlp[default,curl-cffi,mutagen,pycryptodomex]"
-
-# Create working directory
+# Upgrade pip and install backend dependencies + yt-dlp
 WORKDIR /app
 
-# Copy the playlistdl script
-COPY playlistdl.py /app/playlistdl.py
+COPY app/requirements.txt /app/requirements.txt
+
+RUN pip install --upgrade pip setuptools wheel \
+    && pip install --upgrade "yt-dlp[default,curl-cffi,mutagen,pycryptodomex]" \
+    && pip install -r /app/requirements.txt
+
+# Copy backend
+COPY app /app
+
+# Copy frontend
+COPY web /app/web
 
 # Create volumes for downloads and config
 VOLUME /downloads /config
 
-# Default command: run the script
-ENTRYPOINT ["python", "/app/playlistdl.py"]
+# Expose backend port
+EXPOSE 5000
+
+# Run the backend
+ENTRYPOINT ["python", "/app/main.py"]
