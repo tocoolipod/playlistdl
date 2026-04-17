@@ -69,6 +69,7 @@ def download_media():
     if "spotify" in spotify_link:
         command = [
             'spotdl',
+            '--audio', 'youtube,piped,soundcloud'
             '--output', f"{temp_download_folder}/{{artist}}/{{album}}/{{title}}.{{output-ext}}",
             spotify_link
         ]
