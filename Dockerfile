@@ -1,30 +1,27 @@
+# -----------------------------------------------------------------------------
+# RUNTIME (Python + yt-dlp + ffmpeg)
+# -----------------------------------------------------------------------------
+FROM python:3.12-slim
 
-# Use a base image with Python
-FROM python:3.12-alpine
-ENV PYTHONUNBUFFERED=1
+# Install ffmpeg and system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-RUN apk add --no-cache ca-certificates curl python3-dev git ffmpeg
+# Upgrade pip and install yt-dlp
+RUN pip install --upgrade pip setuptools wheel \
+    && pip install --upgrade "yt-dlp[default,curl-cffi,mutagen,pycryptodomex]"
 
-# Set up a virtual environment for dependencies
-RUN python3 -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-# Install Python packages
-RUN pip install --no-cache-dir flask spotdl
-
-# Create directories
+# Create working directory
 WORKDIR /app
-RUN mkdir -p /app/downloads
 
-# Copy application code
-COPY app /app
-COPY web /app/web
+# Copy the playlistdl script
+COPY playlistdl.py /app/playlistdl.py
 
-# Expose the application port
-EXPOSE 5000
+# Create volumes for downloads and config
+VOLUME /downloads /config
 
-# Run the application
-CMD ["python3", "/app/main.py"]
-
-
+# Default command: run the script
+ENTRYPOINT ["python", "/app/playlistdl.py"]
